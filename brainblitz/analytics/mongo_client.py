@@ -29,6 +29,33 @@ _client: MongoClient | None = None
 _init_error_logged = False
 
 
+def _mongo_client_kwargs(uri: str) -> dict[str, Any]:
+    """
+    Extra MongoClient options. Atlas and *.mongodb.net require TLS; using Certifi's CA
+    bundle avoids TLS handshake failures on some macOS/Python builds where the default
+    store is outdated or mismatched.
+    """
+    kwargs: dict[str, Any] = {"serverSelectionTimeoutMS": 3000}
+    lower = uri.lower()
+    uses_tls = (
+        uri.startswith("mongodb+srv://")
+        or ".mongodb.net" in uri
+        or "tls=true" in lower
+        or "ssl=true" in lower
+    )
+    if uses_tls:
+        try:
+            import certifi
+
+            kwargs["tlsCAFile"] = certifi.where()
+        except ImportError:
+            logger.warning(
+                "Mongo URI uses TLS but certifi is not installed; "
+                "pip install certifi is recommended for MongoDB Atlas."
+            )
+    return kwargs
+
+
 def reset_mongo_connection() -> None:
     """
     Close the cached client (e.g. after connection-string changes). Next call to
@@ -64,10 +91,8 @@ def get_client() -> MongoClient | None:
         COLLECTION_QUIZ_ATTEMPTS,
     )
     try:
-        _client = MongoClient(
-            get_mongo_uri(),
-            serverSelectionTimeoutMS=3000,
-        )
+        uri = get_mongo_uri()
+        _client = MongoClient(uri, **_mongo_client_kwargs(uri))
         _init_error_logged = False
         logger.info(
             "Mongo get_client: MongoClient object constructed (connections are lazy until first op)."
@@ -92,6 +117,21 @@ def get_db() -> Database | None:
     name = get_mongo_db_name()
     logger.debug("Mongo get_db: using database %r", name)
     return client[name]
+
+
+def ping_mongo() -> tuple[bool, str | None]:
+    """
+    Return (True, None) if the cluster responds to ping, else (False, short error text).
+    Use this to distinguish "Mongo unreachable" from "connected but no documents".
+    """
+    db = get_db()
+    if db is None:
+        return False, "Mongo client is unavailable (URI disabled or client creation failed)."
+    try:
+        db.command("ping")
+        return True, None
+    except Exception as exc:
+        return False, str(exc)
 
 
 def _collection() -> Collection | None:

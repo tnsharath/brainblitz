@@ -16,6 +16,20 @@
         app will still grade quizzes normally.
       </p>
     {% else %}
+      {% if mongo_connection_error %}
+        <div class="card card--error stack stack--md" style="margin-bottom: 18px;">
+          <h2 style="margin-bottom: 6px;">MongoDB connection failed</h2>
+          <p style="margin-bottom: 0;">
+            The app cannot reach your cluster (TLS/network/credentials). Quiz scoring in SQLite/Postgres
+            still works; only analytics logs are affected. Server logs show the full traceback.
+          </p>
+          <p style="margin-bottom: 0;"><code>{{ mongo_connection_error }}</code></p>
+          <p class="muted" style="margin-bottom: 0;">
+            Typical fixes: use the Atlas <code>mongodb+srv://…</code> URI from “Connect”, install
+            <code>certifi</code>, upgrade Python (3.10+), and confirm Atlas Network Access allows your IP.
+          </p>
+        </div>
+      {% endif %}
       <h2 style="margin-top: 8px;">Your recent attempts (projection demo)</h2>
       {% if recent %}
         <div class="data-rows" style="margin-top: 12px;">
@@ -31,7 +45,11 @@
           {% endfor %}
         </div>
       {% else %}
-        <p>No Mongo rows matched this user yet. Complete a quiz to generate logs.</p>
+        {% if mongo_connection_error %}
+          <p class="muted">Skipped — fix the connection above first.</p>
+        {% else %}
+          <p>No Mongo rows matched this user yet. Complete a quiz to generate logs.</p>
+        {% endif %}
       {% endif %}
 
       <h2 style="margin-top: 26px;">Average score by category (<code>$group</code> pipeline)</h2>
@@ -53,7 +71,11 @@
           {% endfor %}
         </div>
       {% else %}
-        <p>No aggregation results (empty collection or all scores filtered out).</p>
+        {% if mongo_connection_error %}
+          <p class="muted">Skipped — fix the connection above first.</p>
+        {% else %}
+          <p>No aggregation results (empty collection or all scores filtered out).</p>
+        {% endif %}
       {% endif %}
     {% endif %}
   </div>

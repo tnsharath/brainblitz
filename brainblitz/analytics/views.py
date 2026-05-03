@@ -2,7 +2,7 @@ from django.contrib.admin.views.decorators import staff_member_required
 from django.shortcuts import render
 
 from .mongo_aggregation import average_score_per_category
-from .mongo_client import get_user_attempts
+from .mongo_client import get_user_attempts, ping_mongo
 from .mongodb_config import mongo_enabled
 
 
@@ -10,14 +10,20 @@ from .mongodb_config import mongo_enabled
 def demo(request):
     recent: list = []
     aggregate_rows: list = []
+    mongo_connection_error: str | None = None
     if mongo_enabled():
-        recent = get_user_attempts(request.user.id, limit=15)
-        aggregate_rows = average_score_per_category()
+        ok, err = ping_mongo()
+        if ok:
+            recent = get_user_attempts(request.user.id, limit=15)
+            aggregate_rows = average_score_per_category()
+        else:
+            mongo_connection_error = err
     return render(
         request,
         "analytics/demo.html",
         {
             "mongo_enabled": mongo_enabled(),
+            "mongo_connection_error": mongo_connection_error,
             "recent": recent,
             "aggregate_rows": aggregate_rows,
         },
