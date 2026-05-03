@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+  <defs>
+    <linearGradient id="bb" x1="5" y1="3" x2="27" y2="29" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#6366f1" />
+      <stop offset="0.48" stop-color="#8b5cf6" />
+      <stop offset="1" stop-color="#22d3ee" />
+    </linearGradient>
+  </defs>
+  <rect width="32" height="32" rx="10" fill="url(#bb)" />
+  <g transform="translate(4 4)">
+    <polygon
+      fill="#fff"
+      fill-opacity="0.96"
+      points="13 2 3 14 12 14 11 22 21 10 12 10"
+    />
+  </g>
+</svg>

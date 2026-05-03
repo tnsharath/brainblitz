@@ -80,6 +80,7 @@ class QuizAttempt(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="quiz_attempts")
     quiz = models.ForeignKey(Quiz, on_delete=models.CASCADE, related_name="attempts")
     score = models.IntegerField(null=True, blank=True)
+    mongo_log_id = models.CharField(max_length=24, blank=True)
     started_at = models.DateTimeField(auto_now_add=True)
     completed_at = models.DateTimeField(null=True, blank=True)
 

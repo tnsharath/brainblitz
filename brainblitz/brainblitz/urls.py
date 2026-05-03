@@ -23,5 +23,6 @@ urlpatterns = [
     path("", views.home, name="home"),
     path("accounts/", include("brainblitz.auth_urls")),
     path("quizzes/", include("quiz.urls")),
+    path("analytics/", include("analytics.urls")),
     path('admin/', admin.site.urls),
 ]

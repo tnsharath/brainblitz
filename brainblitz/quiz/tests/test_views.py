@@ -1,5 +1,8 @@
+from unittest.mock import patch
+
+from bson import ObjectId
 from django.contrib.auth import get_user_model
-from django.test import Client, TestCase
+from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 
 from quiz.models import (
@@ -15,6 +18,12 @@ from quiz.models import (
 User = get_user_model()
 
 
+@override_settings(
+    MONGODB={
+        "URI": "",
+        "DB": "brainblitz_tests",
+    }
+)
 class QuizFlowTests(TestCase):
     def setUp(self):
         self.client = Client()
@@ -68,7 +77,12 @@ class QuizFlowTests(TestCase):
         self.assertEqual(r.status_code, 200)
         self.assertContains(r, self.quiz.title)
 
-    def test_take_quiz_submit_creates_attempt_and_redirects_leaderboard(self):
+    @patch("quiz.views.log_attempt")
+    @patch("quiz.views.mongo_enabled", return_value=True)
+    def test_take_quiz_submit_creates_attempt_and_redirects_leaderboard(
+        self, _mongo_enabled, log_attempt_mock
+    ):
+        log_attempt_mock.return_value = ObjectId("507f1f77bcf86cd799439011")
         self.client.login(username="student", password="testpass123")
         url = reverse("quiz:take", kwargs={"quiz_id": self.quiz.id})
         r = self.client.post(url, self._post_data_for_full_quiz(), follow=False)
@@ -79,6 +93,18 @@ class QuizFlowTests(TestCase):
         self.assertIsNotNone(attempt.completed_at)
         self.assertEqual(attempt.score, 2)
         self.assertEqual(AttemptAnswer.objects.filter(attempt=attempt).count(), 2)
+        attempt.refresh_from_db()
+        self.assertEqual(attempt.mongo_log_id, "507f1f77bcf86cd799439011")
+
+    def test_take_quiz_submit_without_mongo_does_not_set_mongo_id(self):
+        self.client.login(username="student", password="testpass123")
+        url = reverse("quiz:take", kwargs={"quiz_id": self.quiz.id})
+        r = self.client.post(url, self._post_data_for_full_quiz(), follow=False)
+        self.assertEqual(r.status_code, 302)
+
+        attempt = QuizAttempt.objects.get(user=self.user, quiz=self.quiz)
+        attempt.refresh_from_db()
+        self.assertEqual(attempt.mongo_log_id, "")
 
     def test_completed_quiz_redirects_to_leaderboard_on_get(self):
         self.client.login(username="student", password="testpass123")

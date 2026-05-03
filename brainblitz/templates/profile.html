@@ -3,21 +3,20 @@
 {% block title %}Profile · BrainBlitz{% endblock %}
 
 {% block content %}
-  <div class="card" style="max-width:760px; margin: 0 auto;">
+  <div class="card narrow narrow--profile">
     <h1>Your profile</h1>
     <p>Signed in as <code>{{ request.user.username }}</code></p>
 
-    <form method="post" style="display:grid; gap:12px;">
+    <form method="post" class="stack stack--md">
       {% csrf_token %}
       <div>
-        <div style="margin-bottom:6px; color: rgba(255,255,255,0.72);">Bio</div>
-        <textarea name="bio" rows="5" style="width:100%; padding:10px; border-radius:12px; border:1px solid rgba(255,255,255,0.14); background: rgba(0,0,0,0.15); color: white;">{{ profile.bio|default:"" }}</textarea>
+        <div class="field-label">Bio</div>
+        <textarea name="bio" rows="5">{{ profile.bio|default:"" }}</textarea>
       </div>
-      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+      <div class="row-actions">
         <button class="btn" type="submit">Save</button>
         <a class="btn secondary" href="{% url 'quiz:submit_question' %}">Submit a question</a>
       </div>
     </form>
   </div>
 {% endblock %}
-

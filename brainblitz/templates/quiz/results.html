@@ -5,22 +5,23 @@
 {% block content %}
   <div class="card">
     <h1>Results</h1>
-    <p>
-      Quiz: <code>{{ attempt.quiz.title }}</code> · Student: <code>{{ attempt.user.username }}</code>
-      · Score: <code>{{ attempt.score }}</code>
-    </p>
+    <div class="page-meta">
+      <span class="badge badge--outline-blue">{{ attempt.quiz.title }}</span>
+      <span class="badge">{{ attempt.user.username }}</span>
+      <span class="badge">Score: {{ attempt.score }}</span>
+    </div>
 
     {% if answers %}
-      <div style="display:grid; gap:12px; margin-top: 10px;">
+      <div class="stack stack--md" style="margin-top: 6px;">
         {% for ans in answers %}
-          <div class="card" style="padding:14px;">
-            <div style="font-weight: 700; margin-bottom:8px;">{{ ans.question.text }}</div>
+          <div class="card card--nested card--tight">
+            <div class="result-block">{{ ans.question.text }}</div>
             <div>
               Selected: <code>{{ ans.selected_choice.text }}</code>
               {% if ans.selected_choice.is_correct %}
-                <span style="margin-left:10px; color: rgba(150, 255, 190, 0.95); font-weight:700;">Correct</span>
+                <span class="tag-ok">Correct</span>
               {% else %}
-                <span style="margin-left:10px; color: rgba(255, 180, 180, 0.95); font-weight:700;">Incorrect</span>
+                <span class="tag-bad">Incorrect</span>
               {% endif %}
             </div>
           </div>
@@ -28,11 +29,10 @@
       </div>
     {% endif %}
 
-    <div style="display:flex; gap:10px; flex-wrap:wrap;">
+    <div class="row-actions row-actions--top">
       <a class="btn secondary" href="{% url 'quiz:list' %}">Back to quiz list</a>
       <a class="btn secondary" href="{% url 'quiz:leaderboard' quiz_id=attempt.quiz.id %}">Leaderboard</a>
       <a class="btn secondary" href="{% url 'home' %}">Home</a>
     </div>
   </div>
 {% endblock %}
-

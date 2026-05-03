@@ -8,12 +8,13 @@
     {% if quizzes %}
       <p>Pick a quiz to begin.</p>
 
-      <div style="display:grid; gap:12px;">
+      <div class="stack stack--md">
         {% for quiz in quizzes %}
-          <div class="card" style="padding:14px;">
-            <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:12px; flex-wrap:wrap;">
+          {% cycle "var(--accent-blue)" "var(--accent-yellow)" "var(--accent-green)" "var(--accent-purple)" "var(--accent-pink)" "var(--accent-teal)" as accent silent %}
+          <div class="card card--nested card--tight quiz-item" style="--quiz-accent: {{ accent }};">
+            <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:14px; flex-wrap:wrap;">
               <div>
-                <h3 style="margin-bottom:6px;">{{ quiz.title }}</h3>
+                <h3>{{ quiz.title }}</h3>
                 {% if quiz.description %}
                   <p style="margin-bottom:0;">{{ quiz.description }}</p>
                 {% else %}
@@ -35,14 +36,14 @@
       </div>
     {% else %}
       <p>
-        No quizzes are available yet. Create a quiz in <a href="{% url 'admin:index' %}" style="text-decoration: underline;">admin</a>
+        No quizzes are available yet. Create a quiz in
+        <a href="{% url 'admin:index' %}" class="text-link">admin</a>
         and make sure it contains at least one <code>approved</code> question.
       </p>
-      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+      <div class="row-actions row-actions--top">
         <a class="btn secondary" href="{% url 'quiz:submit_question' %}">Submit a question</a>
         <a class="btn secondary" href="{% url 'home' %}">Back home</a>
       </div>
     {% endif %}
   </div>
 {% endblock %}
-

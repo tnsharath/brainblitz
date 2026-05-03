@@ -26,8 +26,8 @@ No database env vars needed. The database file is `brainblitz/db.sqlite3`.
 **PostgreSQL**  
 Set `POSTGRES_HOST` (and typically `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_PORT`). When `POSTGRES_HOST` is set, Django uses Postgres instead of SQLite.
 
-**MongoDB**  
-Optional `MONGO_*` settings are present for future use; the quiz core uses Django’s SQL database.
+**MongoDB (optional analytics logs)**  
+Set `MONGO_URI` (Atlas or local connection string). Optionally set `MONGO_DB` (default `brainblitz`) — this is the Mongo database name in Compass/PyMongo `client[dbname]`. The quiz core remains on Django’s SQL database.
 
 ## 3. Migrate and superuser
 

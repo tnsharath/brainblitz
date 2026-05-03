@@ -5,31 +5,29 @@
 {% block content %}
   <div class="card">
     <h1>Leaderboard</h1>
-    <p>
-      Quiz: <code>{{ quiz.title }}</code>
+    <div class="page-meta">
+      <span class="badge badge--outline-blue">{{ quiz.title }}</span>
       {% if my_attempt %}
-        · Your score: <code>{{ my_attempt.score }}</code>
+        <span class="badge">Your score: {{ my_attempt.score }}</span>
       {% endif %}
-    </p>
+    </div>
 
     {% if attempts %}
-      <div class="card" style="padding:14px;">
-        <div style="display:grid; grid-template-columns: 70px 1fr 120px 160px; gap:10px; color: rgba(255,255,255,0.72); font-size: 14px; margin-bottom: 10px;">
+      <div class="card card--nested card--tight">
+        <div class="lb-head">
           <div>Rank</div>
           <div>Student</div>
           <div>Score</div>
           <div>Completed</div>
         </div>
 
-        <div style="display:grid; gap:8px;">
+        <div class="lb-rows">
           {% for attempt in attempts %}
-            <div style="display:grid; grid-template-columns: 70px 1fr 120px 160px; gap:10px; padding:10px 12px; border:1px solid rgba(255,255,255,0.12); border-radius:12px; background: {% if my_attempt and attempt.id == my_attempt.id %}rgba(124, 92, 255, 0.16){% else %}rgba(255,255,255,0.03){% endif %};">
-              <div style="color: rgba(255,255,255,0.8);">#{{ forloop.counter }}</div>
-              <div style="font-weight: 700;">{{ attempt.user.username }}</div>
-              <div><code>{{ attempt.score }}</code></div>
-              <div style="color: rgba(255,255,255,0.72);">
-                {{ attempt.completed_at|date:"M d, Y H:i" }}
-              </div>
+            <div class="lb-row {% if my_attempt and attempt.id == my_attempt.id %}lb-row--self{% endif %}">
+              <div class="lb-rank">#{{ forloop.counter }}</div>
+              <div class="lb-user">{{ attempt.user.username }}</div>
+              <div><span class="score-pill">{{ attempt.score }}</span></div>
+              <div class="lb-date">{{ attempt.completed_at|date:"M d, Y H:i" }}</div>
             </div>
           {% endfor %}
         </div>
@@ -38,7 +36,7 @@
       <p>No one has completed this quiz yet.</p>
     {% endif %}
 
-    <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top: 14px;">
+    <div class="row-actions row-actions--top">
       <a class="btn secondary" href="{% url 'quiz:list' %}">Back to quiz list</a>
       {% if not my_attempt %}
         <a class="btn" href="{% url 'quiz:take' quiz_id=quiz.id %}">Take quiz</a>
@@ -46,4 +44,3 @@
     </div>
   </div>
 {% endblock %}
-

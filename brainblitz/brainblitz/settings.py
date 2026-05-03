@@ -14,16 +14,50 @@ import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
-BASE_DIR = Path(__file__).resolve().parent.parent
+# settings.py lives in brainblitz/brainblitz/; manage.py lives in brainblitz/
+_BASE_DIR = Path(__file__).resolve().parent.parent  # same as BASE_DIR below
+_REPO_ROOT = _BASE_DIR.parent
+BASE_DIR = _BASE_DIR
+
+
+def _nonempty_dotenv_merge(paths):
+    """
+    Read .env files without relying on os.environ alone.
+
+    Later paths win for the same key only when the new value is non-empty,
+    so an empty ``MONGO_URI=`` in one file cannot wipe a good URI from another.
+    """
+    merged = {}
+    try:
+        from dotenv import dotenv_values  # type: ignore
+    except ImportError:
+        return merged
+
+    for path in paths:
+        if not path.is_file():
+            continue
+        try:
+            raw = dotenv_values(path)
+        except OSError:
+            continue
+        for key, val in raw.items():
+            if val is None:
+                continue
+            sv = str(val).strip().lstrip("\ufeff").strip('"').strip("'")
+            if sv:
+                merged[key] = sv
+    return merged
+
+
+# Prefer explicit merge so Mongo URI works even if load_dotenv fails or shell has MONGO_URI=
+_DOTENV_MERGED = _nonempty_dotenv_merge((_BASE_DIR / ".env", _REPO_ROOT / ".env"))
 
 try:
     from dotenv import load_dotenv  # type: ignore
 
-    # Common locations:
-    # - repo root: <repo>/.env
-    # - Django project root (this file's BASE_DIR): <repo>/brainblitz/.env
-    load_dotenv(BASE_DIR.parent / ".env")
-    load_dotenv(BASE_DIR / ".env")
+    # Still hydrate os.environ for POSTGRES_* and other callers.
+    load_dotenv(_BASE_DIR / ".env", override=True)
+    load_dotenv(_REPO_ROOT / ".env", override=True)
 except Exception:
     # .env loading is optional; environment variables may be provided by the host
     pass
@@ -118,13 +152,40 @@ else:
         }
     }
 
+
+
+def _env_first_nonempty(*keys: str) -> str:
+    """First non-empty env value; strip BOM/spaces (some editors add U+FEFF)."""
+    for k in keys:
+        raw = os.getenv(k)
+        if raw is None:
+            continue
+        v = raw.strip().lstrip("\ufeff").strip('"').strip("'")
+        if v:
+            return v
+    return ""
+
+
+def _mongo_uri_resolved() -> str:
+    return (
+        _DOTENV_MERGED.get("MONGO_URI")
+        or _DOTENV_MERGED.get("MONGODB_URI")
+        or _env_first_nonempty("MONGO_URI", "MONGODB_URI")
+    )
+
+
+def _mongo_db_resolved() -> str:
+    return (
+        _DOTENV_MERGED.get("MONGO_DB")
+        or _env_first_nonempty("MONGO_DB")
+        or "brainblitz"
+    ).strip()
+
+
 MONGODB = {
-    "URI": os.getenv("MONGO_URI", "").strip(),
-    "HOST": os.getenv("MONGO_HOST", "localhost").strip(),
-    "PORT": int(os.getenv("MONGO_PORT", "27017")),
-    "USERNAME": os.getenv("MONGO_USERNAME", "").strip(),
-    "PASSWORD": os.getenv("MONGO_PASSWORD", ""),
-    "DB": os.getenv("MONGO_DB", "brainblitz").strip(),
+    # Single connection string only (see analytics.mongodb_config).
+    "URI": _mongo_uri_resolved(),
+    "DB": _mongo_db_resolved(),
 }
 
 
@@ -163,6 +224,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
 STATIC_URL = 'static/'
+STATICFILES_DIRS = [BASE_DIR / 'static']
 
 # Auth redirects
 LOGIN_URL = "login"
@@ -173,3 +235,59 @@ LOGOUT_REDIRECT_URL = "home"
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+# Console diagnostics for quiz + Mongo path (BrainBlitz). Not gated on DEBUG so you
+# still see messages if DEBUG were mis-set; bump verbosity via BRAINBLITZ_LOG_LEVEL.
+_brainblitz_log_level = os.getenv("BRAINBLITZ_LOG_LEVEL", "INFO").upper()
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "brainblitz_console": {
+            "format": "%(levelname)s [%(name)s] %(message)s",
+        },
+    },
+    "handlers": {
+        "brainblitz_console": {
+            "class": "logging.StreamHandler",
+            "formatter": "brainblitz_console",
+        },
+    },
+    "loggers": {
+        # Covers analytics.* (mongo_client, mongodb_config, apps, ...)
+        "analytics": {
+            "handlers": ["brainblitz_console"],
+            "level": _brainblitz_log_level,
+            "propagate": False,
+        },
+        # Covers quiz.views, quiz.management, ...
+        "quiz": {
+            "handlers": ["brainblitz_console"],
+            "level": _brainblitz_log_level,
+            "propagate": False,
+        },
+        "brainblitz": {
+            "handlers": ["brainblitz_console"],
+            "level": _brainblitz_log_level,
+            "propagate": False,
+        },
+    },
+}
+
+if DEBUG:
+    import logging
+
+    logger = logging.getLogger("brainblitz.settings")
+    if not MONGODB["URI"]:
+        _p1 = _BASE_DIR / ".env"
+        _p2 = _REPO_ROOT / ".env"
+        logger.warning(
+            "Mongo analytics disabled: MONGO_URI missing after reading .env files. "
+            "Checked merge order %s then %s (exists=%s / exists=%s). "
+            "Restart runserver after edits.",
+            _p1,
+            _p2,
+            _p1.is_file(),
+            _p2.is_file(),
+        )

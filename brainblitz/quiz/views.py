@@ -1,11 +1,23 @@
+import logging
+
 from django.contrib.auth.decorators import login_required
+from django.db import transaction
 from django.shortcuts import get_object_or_404
 from django.shortcuts import redirect, render
 from django.utils import timezone
-from django.db import transaction
+
+from analytics.attempt_log_document import build_attempt_log_document
+from analytics.mongodb_config import (
+    get_mongo_db_name,
+    mongo_diagnostics_summary,
+    mongo_enabled,
+)
+from analytics.mongo_client import log_attempt
 
 from .forms import ChoiceFormSet, QuestionSubmitForm
 from .models import AttemptAnswer, Choice, Question, Quiz, QuizAttempt, QuizQuestion
+
+logger = logging.getLogger(__name__)
 
 
 def quiz_list(request):
@@ -101,6 +113,54 @@ def take_quiz(request, quiz_id: int):
             attempt.score = score
             attempt.completed_at = timezone.now()
             attempt.save(update_fields=["score", "completed_at"])
+
+        logger.info(
+            "[take_quiz] SQL transaction committed ok | attempt.pk=%s user_id=%s quiz_id=%s score=%s | "
+            "Next: optional Mongo append-only event log (%s)",
+            attempt.pk,
+            request.user.pk,
+            quiz.pk,
+            attempt.score,
+            mongo_diagnostics_summary(),
+        )
+
+        if mongo_enabled():
+            logger.info(
+                "[take_quiz] mongo_enabled=True → building BSON document "
+                "(Django stays source of truth; Mongo is analytics only)."
+            )
+            payload = build_attempt_log_document(
+                django_attempt_id=attempt.pk,
+                user=request.user,
+                quiz=quiz,
+                score=attempt.score if attempt.score is not None else score,
+                choice_by_qid=choice_by_qid,
+                ordered_question_ids=question_ids,
+                quiz_question_rows=quiz_questions,
+            )
+            mongo_id = log_attempt(payload)
+            if mongo_id is not None:
+                QuizAttempt.objects.filter(pk=attempt.pk).update(
+                    mongo_log_id=str(mongo_id)
+                )
+                logger.info(
+                    "[take_quiz] mongo_log_id stored on QuizAttempt | attempt.pk=%s mongo_log_id=%s",
+                    attempt.pk,
+                    mongo_id,
+                )
+            else:
+                logger.warning(
+                    "[take_quiz] Mongo insert returned None → attempt.pk=%s still saved in SQL. "
+                    "Scroll up for analytics.mongo_client lines; Compass DB must be %r.",
+                    attempt.pk,
+                    get_mongo_db_name(),
+                )
+        else:
+            logger.warning(
+                "[take_quiz] Mongo analytics disabled — skipping log_attempt | attempt.pk=%s | %s",
+                attempt.pk,
+                mongo_diagnostics_summary(),
+            )
 
         return redirect("quiz:leaderboard", quiz_id=quiz.id)
 

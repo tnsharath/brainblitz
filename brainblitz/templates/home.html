@@ -4,25 +4,84 @@
 
 {% block content %}
   <div class="grid">
+    <div class="col-12">
+      <div class="hero-strip">
+        <div>
+          <h1>Brain<span class="brand-accent">Blitz</span> ⚡</h1>
+          <p class="lede" style="margin-bottom: 0;">
+            A competitive tech quiz platform—browse quizzes, race the clock, and climb the
+            leaderboard.
+          </p>
+        </div>
+        <span class="badge badge--outline-blue">Django + MongoDB</span>
+      </div>
+    </div>
+
     <div class="col-8">
       <div class="card">
-        <h1>Welcome to BrainBlitz</h1>
+        <h2>Jump in</h2>
         <p>
-          This is the starting point. Use the navbar to browse quizzes, take one,
-          and view results.
+          Pick a topic, answer timed sets, and see how you stack up. Your progress stays on your
+          profile between sessions.
         </p>
-        <a class="btn" href="{% url 'quiz:list' %}">Browse quizzes</a>
+        <div class="row-actions row-actions--top" style="margin-top: 0;">
+          <a class="btn" href="{% url 'quiz:list' %}">Browse quizzes</a>
+          <a class="btn secondary" href="{% url 'quiz:submit_question' %}">Submit a question</a>
+        </div>
+
+        <h2 style="margin-top: 22px;">What you can do</h2>
+        <div class="feature-grid">
+          <article class="feature-tile" style="--tile-accent: var(--accent-blue);">
+            <div class="feature-tile__icon" aria-hidden="true">📚</div>
+            <div>
+              <h3>Quiz library</h3>
+              <p>Explore categories—Python, DSA, web, databases—and find your next challenge.</p>
+            </div>
+          </article>
+          <article class="feature-tile" style="--tile-accent: var(--accent-yellow);">
+            <div class="feature-tile__icon" aria-hidden="true">⏱️</div>
+            <div>
+              <h3>Timed challenges</h3>
+              <p>Work through questions step by step; submit when you’re ready for the final stretch.</p>
+            </div>
+          </article>
+          <article class="feature-tile" style="--tile-accent: var(--accent-green);">
+            <div class="feature-tile__icon" aria-hidden="true">🏆</div>
+            <div>
+              <h3>XP &amp; leaderboard</h3>
+              <p>Earn points for correct answers and compete for the top spot on each quiz.</p>
+            </div>
+          </article>
+          <article class="feature-tile" style="--tile-accent: var(--accent-purple);">
+            <div class="feature-tile__icon" aria-hidden="true">✍️</div>
+            <div>
+              <h3>Community questions</h3>
+              <p>Submit ideas for new items; admins review and approve through Django admin.</p>
+            </div>
+          </article>
+          <article class="feature-tile" style="--tile-accent: var(--accent-pink);">
+            <div class="feature-tile__icon" aria-hidden="true">👤</div>
+            <div>
+              <h3>Player profile</h3>
+              <p>Track bio, history, and stats as you play more rounds.</p>
+            </div>
+          </article>
+          <article class="feature-tile" style="--tile-accent: var(--accent-teal);">
+            <div class="feature-tile__icon" aria-hidden="true">📊</div>
+            <div>
+              <h3>Analytics</h3>
+              <p>Staff can explore attempt logs and aggregations when MongoDB is connected.</p>
+            </div>
+          </article>
+        </div>
       </div>
     </div>
 
     <div class="col-4">
       <div class="card">
-        <h3>Quick links</h3>
-        <p>
-          Admin is available at <code>/admin</code>. Quizzes live under
-          <code>/quizzes</code>.
-        </p>
-        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <h2>Quick links</h2>
+        <p>Admin lives at <code>/admin</code>. Public quizzes are under <code>/quizzes</code>.</p>
+        <div class="row-actions row-actions--top" style="margin-top: 0;">
           <a class="btn secondary" href="{% url 'admin:index' %}">Open admin</a>
           <a class="btn secondary" href="{% url 'quiz:list' %}">Quiz list</a>
         </div>
@@ -30,4 +89,3 @@
     </div>
   </div>
 {% endblock %}
-

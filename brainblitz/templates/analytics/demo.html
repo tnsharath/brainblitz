@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block title %}Mongo analytics demo · BrainBlitz{% endblock %}
+
+{% block content %}
+  <div class="card">
+    <h1>MongoDB analytics (staff demo)</h1>
+    <p>
+      Structured users and attempts stay in Django’s relational DB. This page reads the
+      <code>quiz_attempts</code> append-only logs in MongoDB (when <code>MONGO_URI</code>
+      is set in the environment).
+    </p>
+    {% if not mongo_enabled %}
+      <p>
+        Mongo is disabled (no URI / not opted in). Set environment variables and restart—the
+        app will still grade quizzes normally.
+      </p>
+    {% else %}
+      <h2 style="margin-top: 8px;">Your recent attempts (projection demo)</h2>
+      {% if recent %}
+        <div class="data-rows" style="margin-top: 12px;">
+          <div class="data-row data-row--header">
+            <span>Quiz</span>
+            <span>Score</span>
+          </div>
+          {% for row in recent %}
+            <div class="data-row">
+              <span>{{ row.quiz_title }}</span>
+              <span class="score-pill" style="justify-self: end;">{{ row.score }}</span>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <p>No Mongo rows matched this user yet. Complete a quiz to generate logs.</p>
+      {% endif %}
+
+      <h2 style="margin-top: 26px;">Average score by category (<code>$group</code> pipeline)</h2>
+      {% if aggregate_rows %}
+        <div class="data-rows" style="margin-top: 12px;">
+          <div class="data-row data-row--header" style="grid-template-columns: 1fr repeat(3, auto);">
+            <span>Category</span>
+            <span>Avg</span>
+            <span>N</span>
+            <span>Top</span>
+          </div>
+          {% for row in aggregate_rows %}
+            <div class="data-row" style="grid-template-columns: 1fr repeat(3, auto);">
+              <span>{{ row.category|default_if_none:"(none)" }}</span>
+              <span>{{ row.avg_score }}</span>
+              <span>{{ row.attempts }}</span>
+              <span>{{ row.top_score }}</span>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <p>No aggregation results (empty collection or all scores filtered out).</p>
+      {% endif %}
+    {% endif %}
+  </div>
+{% endblock %}
