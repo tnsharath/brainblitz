@@ -1,0 +1,10 @@
+# Core
+Django==4.2.30
+python-dotenv
+
+# Postgres
+psycopg2-binary
+
+# MongoDB
+pymongo
+

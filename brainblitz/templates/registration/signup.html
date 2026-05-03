@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block title %}Sign up · BrainBlitz{% endblock %}
+
+{% block content %}
+  <div class="grid">
+    <div class="col-12">
+      <div class="card" style="max-width:640px; margin: 0 auto;">
+        <h1>Create account</h1>
+        <p>Pick a username and password to start submitting questions.</p>
+
+        <form method="post" style="display:grid; gap:12px;">
+          {% csrf_token %}
+          {{ form.non_field_errors }}
+
+          <div>
+            <div style="margin-bottom:6px; color: rgba(255,255,255,0.72);">Username</div>
+            {{ form.username }}
+            {{ form.username.errors }}
+          </div>
+
+          <div>
+            <div style="margin-bottom:6px; color: rgba(255,255,255,0.72);">Password</div>
+            {{ form.password1 }}
+            {{ form.password1.errors }}
+          </div>
+
+          <div>
+            <div style="margin-bottom:6px; color: rgba(255,255,255,0.72);">Confirm password</div>
+            {{ form.password2 }}
+            {{ form.password2.errors }}
+          </div>
+
+          <button class="btn" type="submit">Create account</button>
+        </form>
+
+        <div style="margin-top:12px; color: rgba(255,255,255,0.72);">
+          Already have an account?
+          <a href="{% url 'login' %}" style="color:white; text-decoration: underline;">Login</a>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+

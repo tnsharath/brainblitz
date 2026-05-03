@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block title %}Login · BrainBlitz{% endblock %}
+
+{% block content %}
+  <div class="grid">
+    <div class="col-12">
+      <div class="card" style="max-width:560px; margin: 0 auto;">
+        <h1>Login</h1>
+        <p>Use your username + password.</p>
+
+        <form method="post" style="display:grid; gap:12px;">
+          {% csrf_token %}
+          {{ form.non_field_errors }}
+
+          <div>
+            <div style="margin-bottom:6px; color: rgba(255,255,255,0.72);">Username</div>
+            {{ form.username }}
+            {{ form.username.errors }}
+          </div>
+
+          <div>
+            <div style="margin-bottom:6px; color: rgba(255,255,255,0.72);">Password</div>
+            {{ form.password }}
+            {{ form.password.errors }}
+          </div>
+
+          <button class="btn" type="submit">Login</button>
+        </form>
+
+        <div style="margin-top:12px; color: rgba(255,255,255,0.72);">
+          Don’t have an account?
+          <a href="{% url 'signup' %}" style="color:white; text-decoration: underline;">Sign up</a>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+

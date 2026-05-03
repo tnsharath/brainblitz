@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block title %}Home · BrainBlitz{% endblock %}
+
+{% block content %}
+  <div class="grid">
+    <div class="col-8">
+      <div class="card">
+        <h1>Welcome to BrainBlitz</h1>
+        <p>
+          This is the starting point. Use the navbar to browse quizzes, take one,
+          and view results.
+        </p>
+        <a class="btn" href="{% url 'quiz:list' %}">Browse quizzes</a>
+      </div>
+    </div>
+
+    <div class="col-4">
+      <div class="card">
+        <h3>Quick links</h3>
+        <p>
+          Admin is available at <code>/admin</code>. Quizzes live under
+          <code>/quizzes</code>.
+        </p>
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+          <a class="btn secondary" href="{% url 'admin:index' %}">Open admin</a>
+          <a class="btn secondary" href="{% url 'quiz:list' %}">Quiz list</a>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+

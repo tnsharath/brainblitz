@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% block title %}Submit question · BrainBlitz{% endblock %}
+
+{% block content %}
+  <div class="card">
+    <h1>Submit a question</h1>
+    <p>
+      Submitted questions start as <code>unapproved</code>. An admin can approve them in the
+      admin panel.
+    </p>
+
+    <form method="post" style="display:grid; gap:12px;">
+      {% csrf_token %}
+
+      {% if form.non_field_errors %}
+        <div class="card" style="border-color: rgba(255, 80, 80, 0.45);">
+          {{ form.non_field_errors }}
+        </div>
+      {% endif %}
+
+      <div>
+        <div style="margin-bottom:6px; color: rgba(255,255,255,0.72);">Category</div>
+        {{ form.category }}
+        {{ form.category.errors }}
+      </div>
+
+      <div>
+        <div style="margin-bottom:6px; color: rgba(255,255,255,0.72);">Question</div>
+        {{ form.text }}
+        {{ form.text.errors }}
+      </div>
+
+      <div class="card" style="padding:14px;">
+        <h3 style="margin-bottom:8px;">Choices (mark exactly one as correct)</h3>
+        {{ formset.management_form }}
+        {% if formset.non_form_errors %}
+          <div style="color: rgba(255, 140, 140, 0.95); margin-bottom:10px;">
+            {{ formset.non_form_errors }}
+          </div>
+        {% endif %}
+
+        <div style="display:grid; gap:10px;">
+          {% for cform in formset %}
+            <div style="display:grid; grid-template-columns: 1fr auto; gap:10px; align-items:center;">
+              {{ cform.text }}
+              <label style="display:flex; gap:8px; align-items:center; color: rgba(255,255,255,0.8);">
+                {{ cform.is_correct }} Correct
+              </label>
+              <div style="grid-column: 1 / -1; color: rgba(255, 140, 140, 0.95);">
+                {{ cform.text.errors }} {{ cform.is_correct.errors }}
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="submit">Submit for approval</button>
+        <a class="btn secondary" href="{% url 'quiz:list' %}">Back to quiz list</a>
+      </div>
+    </form>
+  </div>
+{% endblock %}
+

@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block title %}Quiz list · BrainBlitz{% endblock %}
+
+{% block content %}
+  <div class="card">
+    <h1>Quiz list</h1>
+    {% if quizzes %}
+      <p>Pick a quiz to begin.</p>
+
+      <div style="display:grid; gap:12px;">
+        {% for quiz in quizzes %}
+          <div class="card" style="padding:14px;">
+            <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:12px; flex-wrap:wrap;">
+              <div>
+                <h3 style="margin-bottom:6px;">{{ quiz.title }}</h3>
+                {% if quiz.description %}
+                  <p style="margin-bottom:0;">{{ quiz.description }}</p>
+                {% else %}
+                  <p style="margin-bottom:0;">Ready when you are.</p>
+                {% endif %}
+              </div>
+              {% if request.user.is_authenticated %}
+                {% if quiz.id in attempted_quiz_ids %}
+                  <a class="btn secondary" href="{% url 'quiz:leaderboard' quiz_id=quiz.id %}">View leaderboard</a>
+                {% else %}
+                  <a class="btn" href="{% url 'quiz:take' quiz_id=quiz.id %}">Take quiz</a>
+                {% endif %}
+              {% else %}
+                <a class="btn" href="{% url 'login' %}?next={% url 'quiz:take' quiz_id=quiz.id %}">Login to take</a>
+              {% endif %}
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p>
+        No quizzes are available yet. Create a quiz in <a href="{% url 'admin:index' %}" style="text-decoration: underline;">admin</a>
+        and make sure it contains at least one <code>approved</code> question.
+      </p>
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <a class="btn secondary" href="{% url 'quiz:submit_question' %}">Submit a question</a>
+        <a class="btn secondary" href="{% url 'home' %}">Back home</a>
+      </div>
+    {% endif %}
+  </div>
+{% endblock %}
+
